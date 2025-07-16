@@ -18,17 +18,21 @@ import lombok.RequiredArgsConstructor;
 public class CustomUserDetailsService implements org.springframework.security.core.userdetails.UserDetailsService {
 
     private final UserService userService;
-    
+
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        
 
         User user = userService.findByUsername(username);
-        Collection<GrantedAuthority> authorities = user.getRoles().stream()
-                                                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleName()))
-                                                    .collect(Collectors.toList());
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found: " + username);
+        }
 
-        return new org.springframework.security.core.userdetails.User(user.getUserName(), user.getPassword(), authorities);
-        
+        Collection<GrantedAuthority> authorities = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleName()))
+                .collect(Collectors.toList());
+
+        return new org.springframework.security.core.userdetails.User(user.getUserName(), user.getPassword(),
+                authorities);
+
     }
-    
+
 }
